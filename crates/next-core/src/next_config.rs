@@ -1760,7 +1760,6 @@ impl NextConfig {
         Ok(Vc::cell(
             self.experimental
                 .turbopack_remove_unused_imports
-                // TODO enable by default once stable
                 .unwrap_or(matches!(*mode.await?, NextMode::Build)),
         ))
     }
