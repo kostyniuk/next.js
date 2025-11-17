@@ -50,6 +50,7 @@ impl Adder {
 
     #[turbo_tasks::function]
     async fn add_method(&self, arg1: ResolvedVc<u16>, arg2: ResolvedVc<u32>) -> Result<Vc<u64>> {
+        let _ = self;
         Ok(Vc::cell(u64::from(*arg1.await?) + u64::from(*arg2.await?)))
     }
 }

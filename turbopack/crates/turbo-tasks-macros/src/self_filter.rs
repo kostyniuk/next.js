@@ -79,3 +79,80 @@ fn contains_self_token(tok: &TokenTree) -> bool {
         TokenTree::Punct(..) | TokenTree::Literal(..) => false,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_self_used() {
+        let test_cases = vec![
+            (
+                "no self usage",
+                "{ let x = 42; println!(\"hello\"); }",
+                false,
+            ),
+            ("simple self usage", "{ self.foo(); }", true),
+            ("self field access", "{ let x = self.field; }", true),
+            (
+                "self in nested block",
+                "{ let x = 1; { self.method(); } }",
+                true,
+            ),
+            (
+                "self in impl block not detected",
+                "{ impl Foo { fn bar(&self) { self.baz(); } } }",
+                false,
+            ),
+            (
+                "self before impl block",
+                "{ self.foo(); impl Bar { fn baz(&self) { self.qux(); } } }",
+                true,
+            ),
+            (
+                "self in closure",
+                "{ let f = || { self.method(); }; }",
+                true,
+            ),
+            (
+                "self in if condition",
+                "{ if self.check() { println!(\"true\"); } }",
+                true,
+            ),
+            (
+                "self in match arm",
+                "{ match x { Some(_) => self.handle(), None => {}, } }",
+                true,
+            ),
+            ("self in macro", "{ println!(\"{:?}\", self); }", true),
+            (
+                "self in complex macro",
+                "{ format!(\"value: {}\", self.field); }",
+                true,
+            ),
+            (
+                "no self with similar idents",
+                "{ let myself = 42; let selfish = true; }",
+                false,
+            ),
+            ("empty block", "{}", false),
+            ("self in return statement", "{ return self.value; }", true),
+            (
+                "self as function argument",
+                "{ some_function(self); }",
+                true,
+            ),
+        ];
+
+        for (description, code, expected) in test_cases {
+            let block: syn::Block = syn::parse_str(code)
+                .unwrap_or_else(|e| panic!("Failed to parse block for '{}': {}", description, e));
+            let result = is_self_used(&block);
+            assert_eq!(
+                result, expected,
+                "Test case '{}' failed: expected {}, got {}",
+                description, expected, result
+            );
+        }
+    }
+}
