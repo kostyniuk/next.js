@@ -1830,7 +1830,7 @@ impl<C: Comments> VisitMut for ServerActions<C> {
                     ],
                     src: Box::new(Str {
                         span: DUMMY_SP,
-                        value: "private-next-rsc-action-client-wrapper".into(),
+                        value: atom!("private-next-rsc-action-client-wrapper").into(),
                         raw: None,
                     }),
                     type_only: false,
@@ -1962,7 +1962,7 @@ impl<C: Comments> VisitMut for ServerActions<C> {
                         })],
                         src: Box::new(Str {
                             span: DUMMY_SP,
-                            value: "private-next-rsc-action-validate".into(),
+                            value: atom!("private-next-rsc-action-validate").into(),
                             raw: None,
                         }),
                         type_only: false,
@@ -2013,7 +2013,7 @@ impl<C: Comments> VisitMut for ServerActions<C> {
                 })],
                 src: Box::new(Str {
                     span: DUMMY_SP,
-                    value: "private-next-rsc-cache-wrapper".into(),
+                    value: atom!("private-next-rsc-cache-wrapper").into(),
                     raw: None,
                 }),
                 type_only: false,
@@ -2056,7 +2056,7 @@ impl<C: Comments> VisitMut for ServerActions<C> {
                 })],
                 src: Box::new(Str {
                     span: DUMMY_SP,
-                    value: "private-next-rsc-server-reference".into(),
+                    value: atom!("private-next-rsc-server-reference").into(),
                     raw: None,
                 }),
                 type_only: false,
