@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::{hash_map, BTreeMap},
+    collections::{BTreeMap, hash_map},
     convert::{TryFrom, TryInto},
     mem::{replace, take},
     path::{Path, PathBuf},
@@ -16,25 +16,25 @@ use rustc_hash::{FxHashMap, FxHashSet};
 use serde::Deserialize;
 use sha1::{Digest, Sha1};
 use swc_core::{
-    atoms::{atom, Atom},
+    atoms::{Atom, atom},
     common::{
+        BytePos, DUMMY_SP, FileName, Mark, SourceMap, Span, SyntaxContext,
         comments::{Comment, CommentKind, Comments, SingleThreadedComments},
         errors::HANDLER,
-        source_map::{SourceMapGenConfig, PURE_SP},
+        source_map::{PURE_SP, SourceMapGenConfig},
         util::take::Take,
-        BytePos, FileName, Mark, SourceMap, Span, SyntaxContext, DUMMY_SP,
     },
     ecma::{
         ast::*,
-        codegen::{self, text_writer::JsWriter, Emitter},
-        utils::{private_ident, quote_ident, ExprFactory},
-        visit::{noop_visit_mut_type, visit_mut_pass, VisitMut, VisitMutWith},
+        codegen::{self, Emitter, text_writer::JsWriter},
+        utils::{ExprFactory, private_ident, quote_ident},
+        visit::{VisitMut, VisitMutWith, noop_visit_mut_type, visit_mut_pass},
     },
     quote,
 };
-use turbo_rcstr::{rcstr, RcStr};
+use turbo_rcstr::{RcStr, rcstr};
 
-use crate::FxIndexMap;
+use crate::{FxIndexMap, transforms::export_name_to_atom_lossy};
 
 #[derive(Clone, Copy, Debug, Deserialize)]
 pub enum ServerActionsMode {
@@ -1499,54 +1499,23 @@ impl<C: Comments> VisitMut for ServerActions<C> {
                                     }) = spec
                                     {
                                         if !*is_type_only {
-                                            if let Some(export_name) = exported {
-                                                if let ModuleExportName::Ident(Ident {
-                                                    sym, ..
-                                                }) = export_name
-                                                {
-                                                    // export { foo as bar }
-                                                    self.exported_idents.push((
-                                                        ident.clone(),
-                                                        sym.clone(),
-                                                        self.generate_server_reference_id(
-                                                            sym.as_ref(),
-                                                            in_cache_file,
-                                                            None,
-                                                        ),
-                                                    ));
-                                                } else if let ModuleExportName::Str(str) =
-                                                    export_name
-                                                {
-                                                    // export { foo as "bar" }
-                                                    self.exported_idents.push((
-                                                        ident.clone(),
-                                                        str.value
-                                                            .clone()
-                                                            .to_atom_lossy()
-                                                            .into_owned(),
-                                                        self.generate_server_reference_id(
-                                                            str.value
-                                                                .clone()
-                                                                .to_atom_lossy()
-                                                                .into_owned()
-                                                                .as_ref(),
-                                                            in_cache_file,
-                                                            None,
-                                                        ),
-                                                    ));
-                                                }
-                                            } else {
-                                                // export { foo }
-                                                self.exported_idents.push((
-                                                    ident.clone(),
-                                                    ident.sym.clone(),
-                                                    self.generate_server_reference_id(
-                                                        ident.sym.as_ref(),
-                                                        in_cache_file,
-                                                        None,
-                                                    ),
-                                                ));
-                                            }
+                                            // export { foo as bar }
+                                            // export { foo as "bar" }
+                                            // export { foo }
+                                            let export_name = exported.as_ref().map_or_else(
+                                                || ident.sym.clone(),
+                                                export_name_to_atom_lossy,
+                                            );
+                                            let id = self.generate_server_reference_id(
+                                                &export_name,
+                                                in_cache_file,
+                                                None,
+                                            );
+                                            self.exported_idents.push((
+                                                ident.clone(),
+                                                export_name,
+                                                id,
+                                            ));
                                         }
                                     } else {
                                         disallowed_export_span = named.span;
