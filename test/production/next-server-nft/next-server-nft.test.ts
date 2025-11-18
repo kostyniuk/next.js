@@ -123,7 +123,7 @@ const isReact18 = parseInt(process.env.NEXT_TEST_REACT_VERSION) === 18
          "/node_modules/client-only/*",
          "/node_modules/detect-libc/*",
          "/node_modules/next/dist/build/output/log.js",
-        "/node_modules/next/dist/build/static-paths/app/extract-pathname-route-param-segments-from-loader-tree.js",
+         "/node_modules/next/dist/build/static-paths/app/extract-pathname-route-param-segments-from-loader-tree.js",
          "/node_modules/next/dist/build/static-paths/utils.js",
          "/node_modules/next/dist/client/*",
          "/node_modules/next/dist/compiled/@edge-runtime/cookies/index.js",
